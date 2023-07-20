@@ -2,19 +2,16 @@
 {
     public abstract class Command
     {
-        public double startOfFrame;
-        public double endOfFrame
-        {
-            get {
-                return startOfFrame + deltaTime;
-            }
-        }
-        public double deltaTime;
+        private double _startOfFrame;
+        private double _deltaTime;
+        public double StartOfFrame { get { return _startOfFrame; }  set { _startOfFrame = value; } }
+        public double EndOfFrame { get { return StartOfFrame + DeltaTime; } }
+        public double DeltaTime { get { return _deltaTime; } set { _deltaTime = value; } }
 
         public Command(double startOfFrame, double deltaTime)
         {
-            this.startOfFrame = startOfFrame;
-            this.deltaTime = deltaTime;
+            this.StartOfFrame = startOfFrame;
+            this.DeltaTime = deltaTime;
         }
         public abstract void Execute();
         public abstract void Undo();
