@@ -195,14 +195,11 @@ namespace Assets.Scripts.Gameplay.Components
         //////////////////
         //// MOVEMENT
 
-        private Vector3 GetNextFrameWishDirection(Vector3 moveDir, RaycastHit hit, bool yKill = true)
+        private Vector3 GetNextFrameWishDirection(AngleVectors vectors, Vector3 moveDir, RaycastHit hit, bool yKill = true)
         {
-            //TODO: replace with cameracomponent stuff (the placeholder will not work)
             //var vectors = GetLookAtAsVectors(_pCamera.transform);
-            //var forward = vectors.forward;
-            //var right = vectors.right;
-            var forward = transform.forward;
-            var right = transform.right;
+            var forward = vectors.forward;
+            var right = vectors.right;
             if (forward.y != 0 && yKill)
             {
                 forward.y = 0;
