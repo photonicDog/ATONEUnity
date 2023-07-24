@@ -1,6 +1,4 @@
-﻿using UnityEngine;
-
-namespace Assets.Scripts.Gameplay.Models.Configurations
+﻿namespace Assets.Scripts.Gameplay.Models.Configurations
 {
     public class PhysicsConfig
     {
