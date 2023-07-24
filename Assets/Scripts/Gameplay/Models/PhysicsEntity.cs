@@ -15,6 +15,7 @@ namespace Assets.Scripts.Gameplay.Models
         public PhysicsEntity(PhysicsConfig config)
         {
             _clipPlanes = new Vector3[config.MaxClipPlanes];
+            _colliders = new Collider[config.MaxCollisions];
         }
 
         private Vector3 _velocity;
