@@ -29,11 +29,6 @@ namespace Assets.Scripts.Gameplay.Models
         private Vector3 _slideDirection;
         private float _currentSlideSpeed;
 
-        //playerconfig
-        private float _runSpeed = 30.0f;
-        private float _jumpHeight = 5.0f;
-        //
-
         private bool _isJumping;
         private bool _isGrounded;
         private bool _isSliding;
