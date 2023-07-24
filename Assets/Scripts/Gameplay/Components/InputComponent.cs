@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace Assets.Scripts.Gameplay.Models.Configurations
+namespace Assets.Scripts.Gameplay.Components
 {
     public class InputComponent : MonoBehaviour
     {
