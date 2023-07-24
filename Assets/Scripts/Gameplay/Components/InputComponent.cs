@@ -28,9 +28,12 @@ namespace Assets.Scripts.Gameplay.Components
 
         public Vector2 GetPlayerMovement()
         {
-            return _gameplayControls.Gameplay.Move.ReadValue<Vector2>();
+            var input = _gameplayControls.Gameplay.Move.ReadValue<Vector2>();
+            return new Vector2(input.y, input.x);
         }
 
+        ///NOTE: currently this isn't used for moving the camera in gameplay, because cinemachine uses its 
+        ///      own mouse axis check. this is still here for UI and general mouse movement checks - freya
         public Vector2 GetMouseMovement()
         {
             return _gameplayControls.Gameplay.Look.ReadValue<Vector2>();
@@ -43,8 +46,8 @@ namespace Assets.Scripts.Gameplay.Components
 
         public bool StoppedJumping()
         {
-            return _gameplayControls.Gameplay.Jump.phase == UnityEngine.InputSystem.InputActionPhase.Canceled ||
-                _gameplayControls.Gameplay.Jump.phase == UnityEngine.InputSystem.InputActionPhase.Waiting;
+            return _gameplayControls.Gameplay.Jump.phase == InputActionPhase.Canceled ||
+                _gameplayControls.Gameplay.Jump.phase == InputActionPhase.Waiting;
         }
 
         public bool GetFire()
@@ -54,8 +57,8 @@ namespace Assets.Scripts.Gameplay.Components
 
         public bool GetRelease()
         {
-            return _gameplayControls.Gameplay.Fire.phase == UnityEngine.InputSystem.InputActionPhase.Canceled ||
-                _gameplayControls.Gameplay.Fire.phase == UnityEngine.InputSystem.InputActionPhase.Waiting;
+            return _gameplayControls.Gameplay.Fire.phase == InputActionPhase.Canceled ||
+                _gameplayControls.Gameplay.Fire.phase == InputActionPhase.Waiting;
         }
 
         public bool GetAltFire()
