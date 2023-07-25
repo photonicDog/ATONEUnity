@@ -42,6 +42,52 @@ namespace Assets.Scripts.Gameplay.Components
         }
 
         //////////////////
+        //// HELPER
+
+        public void AlignPosition(Vector3 position)
+        {
+            _entity.Position = position;
+        }
+
+        public void Impulse(Vector3 impulse)
+        {
+            _entity.Velocity += impulse;
+        }
+
+        public void Burst(Vector3 burst)
+        {
+            // stops velocity in that direction, then adds on the burst (for jumps)
+            _entity.Velocity = Vector3.Scale(_entity.Velocity, Vector3.one - burst.normalized) + burst;
+        }
+
+        public void KillVelocity()
+        {
+            _entity.Velocity = Vector3.zero;
+        }
+
+        //////////////////
+        //// STATES
+
+        public void SetJumpState(bool input)
+        {
+            _entity.IsJumping = input;
+        }
+
+        public void CheckGravity()
+        {
+            if (_entity.IsGrounded == false)
+            {
+                Impulse(Vector3.up * _config.Gravity * _config.GravityMod * Time.deltaTime);
+            }
+        }
+
+        public void StopSliding()
+        {
+            _entity.IsSliding = false;
+            _entity.WasSliding = false;
+        }
+
+        //////////////////
         //// COLLISIONS
 
         public bool CheckGround(CapsuleCollider entCollider)
@@ -62,6 +108,7 @@ namespace Assets.Scripts.Gameplay.Components
             var castInfo = CheckCollision(entCollider, entCollider.transform.position, down, _groundLayerMask);
             if (castInfo.collider == null || Vector3.Angle(Vector3.up, castInfo.normal) > _config.SlopeAngleLimit || (_entity.IsJumping && _entity.Velocity.y > 0f))
             {
+                _entity.IsGrounded = false;
                 _entity.Ground = null;
                 _entity.GroundNormal = Vector3.zero;
 
@@ -74,12 +121,50 @@ namespace Assets.Scripts.Gameplay.Components
             }
             else
             {
+                _entity.IsGrounded = true;
                 _entity.Ground = castInfo.collider.gameObject;
                 _entity.GroundNormal = castInfo.normal;
                 _entity.SurfaceFriction = _config.GroundFriction;
                 _entity.Velocity = _entity.Velocity.KillY();
                 return true;
             }
+        }
+        public bool CheckSliding()
+        {
+            if (_entity.WasSliding == false)
+            {
+                _entity.SlideDirection = _entity.Velocity.KillY().normalized;
+                _entity.CurrentSlideSpeed = Mathf.Max(_config.MaxSlideSpeed, _entity.Velocity.KillY().magnitude);
+            }
+
+            _entity.IsSliding = false;
+            if (_entity.Speed > _config.MinSlideSpeed && _config.SlideDelay <= 0f && Vector3.Angle(Vector3.up, _entity.GroundNormal) > 5)
+            {
+                if (_entity.WasSliding == false)
+                {
+                    _entity.CurrentSlideSpeed = Mathf.Clamp(_entity.CurrentSlideSpeed * _config.SlideSpeedMod, _config.MinSlideSpeed, _config.MaxSlideSpeed);
+
+                    _entity.IsSliding = true;
+                    _entity.WasSliding = true;
+                    SlideMovement();
+                }
+            }
+            else
+            {
+                if (_entity.SlideDelayTimer > 0f)
+                {
+                    _entity.SlideDelayTimer -= Time.deltaTime;
+                }
+
+                if (_entity.WasSliding == true)
+                {
+                    _entity.SlideDelayTimer = 0.5f;
+                }
+
+                _entity.WasSliding = false;
+        }
+
+            return _entity.IsSliding;
         }
         public void ResolveCollisions(CapsuleCollider entCollider)
         {
@@ -195,7 +280,59 @@ namespace Assets.Scripts.Gameplay.Components
         //////////////////
         //// MOVEMENT
 
-        private Vector3 GetNextFrameWishDirection(AngleVectors vectors, Vector3 moveDir, RaycastHit hit, bool yKill = true)
+        public Vector3 ProcessMovement(CapsuleCollider collider, Vector2 moveInput, float runSpeed, AngleVectors lookDirection, bool jumpInput, float jumpHeight, float deltaTime)
+        {
+            SetJumpState(jumpInput);
+            CheckGravity();
+            CheckGround(collider);
+            if (_entity.IsGrounded)
+            {
+                CheckSliding();
+            }
+
+            if (_entity.IsJumping && _entity.IsGrounded)
+            {
+                Jump(jumpHeight);
+            }
+            else if (_entity.IsGrounded)
+            {
+                WalkMove(moveInput, lookDirection, runSpeed);
+            }
+            else
+            {
+                AirMove(moveInput, lookDirection);
+                TryMove(collider, deltaTime);
+            }
+
+            MovePosition(deltaTime);
+
+            ResolveCollisions(collider);
+
+            return _entity.Position;
+        }
+        public void Jump(float jumpHeight)
+        {
+            Burst(jumpHeight * Vector3.up);
+            _entity.IsGrounded = false;
+            _entity.SurfaceFriction = 0f;
+        }
+        public void WalkMove(Vector2 moveInput, AngleVectors lookAt, float speed)
+        {
+            _entity.Velocity = ApplyFriction(_entity.Velocity);
+            _entity.WishVelocity = GetNextFrameWishDirection(lookAt, moveInput) * speed;
+            _entity.Velocity = GetNewGroundVelocity(_entity.WishDirection, _entity.WishSpeed, _entity.Velocity);
+        }
+        public void AirMove(Vector2 moveInput, AngleVectors lookAt)
+        {
+            _entity.WasSliding = false;
+            _entity.WishVelocity = GetNextFrameWishDirection(lookAt, moveInput, false);
+            _entity.Velocity = GetNewAirVelocity(_entity.WishDirection, _entity.WishSpeed, _entity.Velocity);
+        }
+        public void MovePosition(float deltaTime)
+        {
+            _entity.Position += _entity.Velocity * deltaTime;
+        }
+        private Vector3 GetNextFrameWishDirection(AngleVectors vectors, Vector3 moveDir, bool yKill = true)
         {
             //var vectors = GetLookAtAsVectors(_pCamera.transform);
             var forward = vectors.forward;
@@ -215,7 +352,7 @@ namespace Assets.Scripts.Gameplay.Components
 
             return new Vector3(moveDir.x * forward.x + moveDir.z * right.x, moveDir.x * forward.y + moveDir.z * right.y, moveDir.x * forward.z + moveDir.z * right.z);
         }
-        private Vector3 GetNewGroundVelocity(Vector3 wishDir, float wishSpeed, Vector3 prevFrameVel, RaycastHit hit)
+        private Vector3 GetNewGroundVelocity(Vector3 wishDir, float wishSpeed, Vector3 prevFrameVel)
         {
 
             Vector3 forwardVel = Vector3.Cross(_entity.GroundNormal, Quaternion.AngleAxis(-90, Vector3.up) * new Vector3(_entity.Velocity.x, 0f, _entity.Velocity.z));
@@ -230,7 +367,7 @@ namespace Assets.Scripts.Gameplay.Components
 
             return newVel;
         }
-        private Vector3 GetNewAirVelocity(Vector3 wishDir, float wishSpeed, Vector3 prevFrameVel, RaycastHit hit)
+        private Vector3 GetNewAirVelocity(Vector3 wishDir, float wishSpeed, Vector3 prevFrameVel)
         {
             if (wishSpeed > _config.MaxAirWishSpeed)
             {
@@ -395,8 +532,10 @@ namespace Assets.Scripts.Gameplay.Components
                 return false;
             }
         }
-        public TryMoveResult TryMove(Vector3 origin, ref Vector3 velocity, CapsuleCollider collider, float deltaTime)
+        public TryMoveResult TryMove(CapsuleCollider collider, float deltaTime)
     {
+            var origin = collider.transform.position;
+            var velocity = _entity.Velocity;
         float d;
         var originalVel = velocity;
         var primalVel = velocity; //i love this variable name
@@ -464,8 +603,10 @@ namespace Assets.Scripts.Gameplay.Components
             {
                 if (_entity.ClipPlanes[0].y > _config.SlopeYNormalLimit)
                 {
+                        _entity.Velocity = velocity;
                     return blocked;
-                } else
+                    }
+                    else
                 {
                     ClipVelocity(originalVel, _entity.ClipPlanes[0], ref newVel, 1 + _config.BounceMod * (1 - _entity.SurfaceFriction));
                 }
@@ -475,14 +616,14 @@ namespace Assets.Scripts.Gameplay.Components
             }
             else
             {
-                for (int i=0; i < numPlanes; i++)
+                    for (int i = 0; i < numPlanes; i++)
                 {
                     newVel = _entity.Velocity;
                     ClipVelocity(originalVel, _entity.ClipPlanes[0], ref newVel, 1);
 
-                    for (int j=0; j < numPlanes; j++)
+                        for (int j = 0; j < numPlanes; j++)
                     {
-                        if (j!=1)
+                            if (j != 1)
                         {
                             if (Vector3.Dot(_entity.Velocity, _entity.ClipPlanes[j]) < 0)
                             {
@@ -521,6 +662,8 @@ namespace Assets.Scripts.Gameplay.Components
         {
             velocity = Vector3.zero;
         }
+
+            _entity.Velocity = velocity;
         return blocked;
         }
 

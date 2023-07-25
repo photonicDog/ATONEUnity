@@ -29,10 +29,12 @@ namespace Assets.Scripts.Gameplay.Models
         private Collider[] _colliders;
         private Vector3 _slideDirection;
         private float _currentSlideSpeed;
+        private float _slideDelayTimer;
 
         private bool _isJumping;
         private bool _isGrounded;
         private bool _isSliding;
+        private bool _wasSliding;
 
         public Vector3 Position { get => _position; set => _position = value; }
 
@@ -55,14 +57,16 @@ namespace Assets.Scripts.Gameplay.Models
         public float SurfaceFriction { get => _surfaceFriction; set => _surfaceFriction = value; }
 
         public bool IsGrounded { get => _isGrounded; set => _isGrounded = value; }
-        public bool IsSliding { get => _isSliding; set => _isSliding = value; }
         public bool IsJumping { get => _isJumping; set => _isJumping = value; }
+        public bool IsSliding { get => _isSliding; set => _isSliding = value; }
+        public bool WasSliding { get => _wasSliding; set => _wasSliding = value; }
 
         public Vector3[] ClipPlanes { get => _clipPlanes; set => _clipPlanes = value; }
         public Collider[] Collisions { get => _colliders; set => _colliders = value; }
     
         public Vector3 SlideDirection { get => _slideDirection; set => _slideDirection = value; }
         public float CurrentSlideSpeed { get => _currentSlideSpeed; set => _currentSlideSpeed = value;}
+        public float SlideDelayTimer {  get => _slideDelayTimer; set => _slideDelayTimer = value; } 
     
     }
 }
