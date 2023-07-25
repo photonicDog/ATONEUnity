@@ -44,7 +44,13 @@ namespace Assets.Scripts.Gameplay.Components
             return _gameplayControls.Gameplay.Jump.triggered;
         }
 
-        public bool StoppedJumping()
+        public bool HeldJumping()
+        {
+            if (StartedJumping() || StoppedJumping() == false) return false;
+            else return !StoppedJumping();
+        }
+
+        private bool StoppedJumping()
         {
             return _gameplayControls.Gameplay.Jump.phase == InputActionPhase.Canceled ||
                 _gameplayControls.Gameplay.Jump.phase == InputActionPhase.Waiting;
