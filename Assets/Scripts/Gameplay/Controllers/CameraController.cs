@@ -1,9 +1,7 @@
-﻿using System.Collections;
-using UnityEngine;
-using Cinemachine;
+﻿using Assets.Scripts.Gameplay.Models.Configurations;
 using Assets.Scripts.Gameplay.Structures;
-using UnityEngine.Windows;
-using Assets.Scripts.Gameplay.Models.Configurations;
+using Cinemachine;
+using UnityEngine;
 
 namespace Assets.Scripts.Gameplay.Controllers
 {

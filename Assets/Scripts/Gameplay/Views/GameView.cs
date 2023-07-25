@@ -1,5 +1,4 @@
 ﻿using Assets.Scripts.Gameplay.Controllers;
-using System.Collections;
 using TMPro;
 using UnityEngine;
 
