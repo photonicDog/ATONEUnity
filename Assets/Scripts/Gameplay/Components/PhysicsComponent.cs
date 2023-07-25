@@ -35,7 +35,12 @@ namespace Assets.Scripts.Gameplay.Components
         //////////////////
         //// HELPER
 
-        public void AlignPosition(Vector3 position)
+        public Vector3 GetPosition()
+        {
+            return _entity.Position;
+        }
+
+        public void SetPosition(Vector3 position)
         {
             _entity.Position = position;
         }
