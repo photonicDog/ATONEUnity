@@ -3,7 +3,7 @@ using UnityEngine.InputSystem;
 
 namespace Assets.Scripts.Gameplay.Components
 {
-    public class InputComponent : MonoBehaviour
+    public class InputComponent
     {
         private GameplayControls _gameplayControls;
 
