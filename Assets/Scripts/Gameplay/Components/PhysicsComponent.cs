@@ -1,22 +1,13 @@
 ﻿using Assets.Scripts.Extensions;
-using Assets.Scripts.Gameplay.Interfaces;
 using Assets.Scripts.Gameplay.Models;
 using Assets.Scripts.Gameplay.Models.Configurations;
 using Assets.Scripts.Gameplay.Structures;
 using Assets.Scripts.Gameplay.Types.Enums;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEditor.Experimental.GraphView;
-using UnityEditorInternal;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 namespace Assets.Scripts.Gameplay.Components
 {
-    public class PhysicsComponent : MonoBehaviour
+    public class PhysicsComponent
     {
         private PhysicsEntity _entity;
         private PhysicsConfig _config;
@@ -162,7 +153,7 @@ namespace Assets.Scripts.Gameplay.Components
                 }
 
                 _entity.WasSliding = false;
-        }
+            }
 
             return _entity.IsSliding;
         }
@@ -533,138 +524,138 @@ namespace Assets.Scripts.Gameplay.Components
             }
         }
         public TryMoveResult TryMove(CapsuleCollider collider, float deltaTime)
-    {
+        {
             var origin = collider.transform.position;
             var velocity = _entity.Velocity;
-        float d;
-        var originalVel = velocity;
-        var primalVel = velocity; //i love this variable name
-        var newVel = new Vector3();
-        var timeLeft = deltaTime;
-        var allFraction = 0f;
-        var numPlanes = 0;
-        TryMoveResult blocked = TryMoveResult.Unblocked;
+            float d;
+            var originalVel = velocity;
+            var primalVel = velocity; //i love this variable name
+            var newVel = new Vector3();
+            var timeLeft = deltaTime;
+            var allFraction = 0f;
+            var numPlanes = 0;
+            TryMoveResult blocked = TryMoveResult.Unblocked;
 
-        for (int bumpcount = 0; bumpcount < _config.NumBumps; bumpcount++)
-        {
-
-            //end if stopped
-            if (_entity.Velocity.magnitude == 0f)
+            for (int bumpcount = 0; bumpcount < _config.NumBumps; bumpcount++)
             {
-                break;
-            }
 
-            var dest = origin + velocity * timeLeft;
-            var castInfo = CheckCollision(collider, origin, dest, _groundLayerMask);
-
-            allFraction += castInfo.fraction;
-
-            if (castInfo.fraction > 0f)
-            {
-                originalVel = velocity;
-                numPlanes = 0;
-            }
-
-            //fraction = 1 means we made the whole journey. woo!
-            if (castInfo.fraction == 1f)
-            {
-                break;
-            }
-
-            //if the normal is 1 its a floor. if its between 1 and 0.7 its a walkable slope
-            if (castInfo.normal.y > _config.SlopeYNormalLimit)
-            {
-                blocked = TryMoveResult.BlockedByFloor;
-            }
-
-            //if the normal's y is zero its a wall or a step
-            if (castInfo.normal.y == 0)
-            {
-                blocked = TryMoveResult.BlockedByWall;
-            }
-
-            timeLeft -= timeLeft * castInfo.fraction;
-
-            //so this is here in case we run out of planes to clip against
-            //but im going to be real i dont think this is relevant or does anything
-            //clip planes are invisible walls with funny properties in the source engine (unrelated to rendering clip planes (thanks valve))
-            //the distinction is not super relevant here? but any object we might run into counts as a clip plane for this
-            //so im still implementing it but. now you know i feel weird about it
-            if (numPlanes >= _config.MaxClipPlanes)
-            {
-                velocity = Vector3.zero;
-                break;
-            }
-
-            _entity.ClipPlanes[numPlanes] = castInfo.normal;
-            numPlanes++;
-
-            if (numPlanes == 1)
-            {
-                if (_entity.ClipPlanes[0].y > _config.SlopeYNormalLimit)
+                //end if stopped
+                if (_entity.Velocity.magnitude == 0f)
                 {
-                        _entity.Velocity = velocity;
-                    return blocked;
-                    }
-                    else
-                {
-                    ClipVelocity(originalVel, _entity.ClipPlanes[0], ref newVel, 1 + _config.BounceMod * (1 - _entity.SurfaceFriction));
+                    break;
                 }
 
-                velocity = newVel;
-                originalVel = newVel;
-            }
-            else
-            {
-                    for (int i = 0; i < numPlanes; i++)
+                var dest = origin + velocity * timeLeft;
+                var castInfo = CheckCollision(collider, origin, dest, _groundLayerMask);
+
+                allFraction += castInfo.fraction;
+
+                if (castInfo.fraction > 0f)
                 {
-                    newVel = _entity.Velocity;
-                    ClipVelocity(originalVel, _entity.ClipPlanes[0], ref newVel, 1);
+                    originalVel = velocity;
+                    numPlanes = 0;
+                }
+
+                //fraction = 1 means we made the whole journey. woo!
+                if (castInfo.fraction == 1f)
+                {
+                    break;
+                }
+
+                //if the normal is 1 its a floor. if its between 1 and 0.7 its a walkable slope
+                if (castInfo.normal.y > _config.SlopeYNormalLimit)
+                {
+                    blocked = TryMoveResult.BlockedByFloor;
+                }
+
+                //if the normal's y is zero its a wall or a step
+                if (castInfo.normal.y == 0)
+                {
+                    blocked = TryMoveResult.BlockedByWall;
+                }
+
+                timeLeft -= timeLeft * castInfo.fraction;
+
+                //so this is here in case we run out of planes to clip against
+                //but im going to be real i dont think this is relevant or does anything
+                //clip planes are invisible walls with funny properties in the source engine (unrelated to rendering clip planes (thanks valve))
+                //the distinction is not super relevant here? but any object we might run into counts as a clip plane for this
+                //so im still implementing it but. now you know i feel weird about it
+                if (numPlanes >= _config.MaxClipPlanes)
+                {
+                    velocity = Vector3.zero;
+                    break;
+                }
+
+                _entity.ClipPlanes[numPlanes] = castInfo.normal;
+                numPlanes++;
+
+                if (numPlanes == 1)
+                {
+                    if (_entity.ClipPlanes[0].y > _config.SlopeYNormalLimit)
+                    {
+                        _entity.Velocity = velocity;
+                        return blocked;
+                    }
+                    else
+                    {
+                        ClipVelocity(originalVel, _entity.ClipPlanes[0], ref newVel, 1 + _config.BounceMod * (1 - _entity.SurfaceFriction));
+                    }
+
+                    velocity = newVel;
+                    originalVel = newVel;
+                }
+                else
+                {
+                    for (int i = 0; i < numPlanes; i++)
+                    {
+                        newVel = _entity.Velocity;
+                        ClipVelocity(originalVel, _entity.ClipPlanes[0], ref newVel, 1);
 
                         for (int j = 0; j < numPlanes; j++)
-                    {
-                            if (j != 1)
                         {
-                            if (Vector3.Dot(_entity.Velocity, _entity.ClipPlanes[j]) < 0)
+                            if (j != 1)
+                            {
+                                if (Vector3.Dot(_entity.Velocity, _entity.ClipPlanes[j]) < 0)
+                                {
+                                    break;
+                                }
+                            }
+                            if (j == numPlanes)
                             {
                                 break;
                             }
                         }
-                        if (j == numPlanes)
+                        if (i == numPlanes)
                         {
-                            break;
+                            if (numPlanes != 2)
+                            {
+                                _entity.Velocity = origin;
+                                break;
+                            }
+                            var dir = Vector3.Cross(_entity.ClipPlanes[0], _entity.ClipPlanes[1]).normalized;
+                            d = Vector3.Dot(dir, velocity);
+                            velocity = dir * d;
                         }
-                    }
-                    if (i == numPlanes)
-                    {
-                        if (numPlanes != 2)
-                        {
-                            _entity.Velocity = origin;
-                            break;
-                        }
-                        var dir = Vector3.Cross(_entity.ClipPlanes[0], _entity.ClipPlanes[1]).normalized;
-                        d = Vector3.Dot(dir, velocity);
-                        velocity = dir * d;
-                    }
 
-                    d = Vector3.Dot(velocity, primalVel);
-                    if (d <= 0f)
-                    {
-                        velocity = Vector3.zero;
-                        break;
+                        d = Vector3.Dot(velocity, primalVel);
+                        if (d <= 0f)
+                        {
+                            velocity = Vector3.zero;
+                            break;
+                        }
                     }
                 }
+
             }
 
-        }
-
-        if (allFraction == 0f)
-        {
-            velocity = Vector3.zero;
-        }
+            if (allFraction == 0f)
+            {
+                velocity = Vector3.zero;
+            }
 
             _entity.Velocity = velocity;
-        return blocked;
+            return blocked;
         }
 
     }
