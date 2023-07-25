@@ -1,5 +1,4 @@
 ﻿using Assets.Scripts.Gameplay.Components;
-using Assets.Scripts.Gameplay.Interfaces;
 using Assets.Scripts.Gameplay.Models;
 using Assets.Scripts.Gameplay.Models.Configurations;
 using UnityEngine;
@@ -9,7 +8,6 @@ namespace Assets.Scripts.Gameplay.Controllers
     public class PlayerController : MonoBehaviour
     {
         private PlayerConfig _config;
-        private Rigidbody _rigidbody;
         private CapsuleCollider _collider;
         private InputComponent _input;
         private PhysicsComponent _physics;
@@ -26,7 +24,6 @@ namespace Assets.Scripts.Gameplay.Controllers
             Cursor.lockState = CursorLockMode.Locked;
             _input = GetComponent<InputComponent>();
             _collider = GetComponent<CapsuleCollider>();
-            _rigidbody = GetComponent<Rigidbody>();
             _physics = new PhysicsComponent();
             Camera = GameObject.FindGameObjectsWithTag("CameraControl")[0].GetComponent<CameraController>();
             Camera.Player = this;
