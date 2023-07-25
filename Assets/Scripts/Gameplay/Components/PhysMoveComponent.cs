@@ -7,20 +7,20 @@ using UnityEngine;
 
 namespace Assets.Scripts.Gameplay.Components
 {
-    public class PhysicsComponent
+    public class PhysMoveComponent
     {
         private PhysicsEntity _entity;
         private PhysicsConfig _config;
 
         private LayerMask _groundLayerMask;
 
-        public PhysicsComponent()
+        public PhysMoveComponent()
         {
             var config = new PhysicsConfig();
             SetInitValues(new PhysicsEntity(config), config);
         }
 
-        public PhysicsComponent(PhysicsEntity entity, PhysicsConfig config)
+        public PhysMoveComponent(PhysicsEntity entity, PhysicsConfig config)
         {
             SetInitValues(entity, config);
         }

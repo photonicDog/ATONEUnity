@@ -10,7 +10,7 @@ namespace Assets.Scripts.Gameplay.Controllers
         private PlayerConfig _config;
         private CapsuleCollider _collider;
         private InputComponent _input;
-        private PhysicsComponent _physics;
+        private PhysMoveComponent _physics;
 
         public CameraController Camera;
 
@@ -24,7 +24,7 @@ namespace Assets.Scripts.Gameplay.Controllers
             Cursor.lockState = CursorLockMode.Locked;
             _input = GetComponent<InputComponent>();
             _collider = GetComponent<CapsuleCollider>();
-            _physics = new PhysicsComponent();
+            _physics = new PhysMoveComponent();
             Camera = GameObject.FindGameObjectsWithTag("CameraControl")[0].GetComponent<CameraController>();
             Camera.Player = this;
         }
