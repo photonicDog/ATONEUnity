@@ -105,18 +105,10 @@ public class MovementCore : MonoBehaviour
         {
             _movement.Velocity = Vector3.zero;
             transform.position = new Vector3(-16.9454803f, 2.74504304f, 101.066254f);
-            FindObjectOfType<VirtualCameraController>().transform.rotation = Quaternion.Euler(-10, 0, 0);
+            FindObjectOfType<CameraController>().transform.rotation = Quaternion.Euler(-10, 0, 0);
         }
 
-        if(_pInput.StartedJumping())
-        {
-            jumpPressed = true;
-        }
-
-        if(_pInput.StoppedJumping())
-        {
-            jumpPressed = false;
-        }
+        jumpPressed = _pInput.StartedJumping() || _pInput.HeldJumping();
 
         pViewDir = _pCamera.transform.forward;
         pMoveInput = GetInputVector();
