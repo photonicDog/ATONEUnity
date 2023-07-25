@@ -1,5 +1,5 @@
 using Assets.Scripts.Debug;
-using Assets.Scripts.Gameplay.Input;
+using Assets.Scripts.Gameplay.Components;
 using Assets.Scripts.Gameplay.Structures;
 using System.Collections.Generic;
 using TMPro;
@@ -12,7 +12,6 @@ public class DebugView : MonoBehaviour
     public bool RecordAngleSpeedIncreases;
 
     private TextMeshPro _textMesh;
-    private InputManager _pInput;
     private Transform _pCamera;
     private DebugData _debug;
 
@@ -45,7 +44,7 @@ public class DebugView : MonoBehaviour
     void Start()
     {
         _textMesh = GetComponent<TextMeshPro>();
-        _pInput = InputManager.Instance;
+        //_pInput = InputManager.Instance;
         _debug = DebugData.Instance;
 
         ViewAnglesOfJumpChain = new List<Vector2>();
@@ -117,13 +116,6 @@ public class DebugView : MonoBehaviour
         CurrentVelocity = _debug.CurrentVelocity;
         CurrentSpeed = _debug.CurrentSpeed;
         AngleChangeSinceLastJump = RelativeAngle(CurrentViewAngle - ViewAngleAtLastJump);
-    }
-
-    public Vector2 GetInputVector()
-    {
-        var input = _pInput.GetPlayerMovement();
-        return new Vector2(input.y, input.x);
-        //the wasd is inverted idk why but c'est the vie
     }
 
     public float RelativeAngle(float angle)

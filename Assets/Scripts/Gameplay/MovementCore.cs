@@ -1,7 +1,7 @@
 using Assets.Scripts.Debug;
 using Assets.Scripts.Gameplay.Controllers;
-using Assets.Scripts.Gameplay.Input;
 using Assets.Scripts.Gameplay.Interfaces;
+using Assets.Scripts.Gameplay.Components;
 using Assets.Scripts.Gameplay.Structures;
 using Assets.Scripts.Gameplay.Types.Enums;
 using UnityEngine;
@@ -11,7 +11,7 @@ public class MovementCore : MonoBehaviour
 {
     private Rigidbody _pRigidbody;
     private CapsuleCollider _pCollider;
-    private InputManager _pInput;
+    private InputComponent _pInput;
     private Transform _pCamera;
     private RaycastHit _groundRaycast;
     private DebugData _debug;
@@ -87,7 +87,7 @@ public class MovementCore : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked;
         _pRigidbody = GetComponent<Rigidbody>();
         _pCollider = GetComponent<CapsuleCollider>();
-        _pInput = InputManager.Instance;
+        //_pInput = new InputComponent();
         _debug = DebugData.Instance;
         pMoveInput = new Vector3();
         pViewDir = new Vector2();
@@ -105,18 +105,10 @@ public class MovementCore : MonoBehaviour
         {
             _movement.Velocity = Vector3.zero;
             transform.position = new Vector3(-16.9454803f, 2.74504304f, 101.066254f);
-            FindObjectOfType<VirtualCameraController>().transform.rotation = Quaternion.Euler(-10, 0, 0);
+            FindObjectOfType<CameraController>().transform.rotation = Quaternion.Euler(-10, 0, 0);
         }
 
-        if(_pInput.StartedJumping())
-        {
-            jumpPressed = true;
-        }
-
-        if(_pInput.StoppedJumping())
-        {
-            jumpPressed = false;
-        }
+        jumpPressed = _pInput.StartedJumping() || _pInput.HeldJumping();
 
         pViewDir = _pCamera.transform.forward;
         pMoveInput = GetInputVector();
