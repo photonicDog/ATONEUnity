@@ -35,6 +35,10 @@ namespace Assets.Scripts.Gameplay.Components
         //////////////////
         //// HELPER
 
+        public float GetSpeed()
+        {
+            return _entity.Speed;
+        }
         public Vector3 GetPosition()
         {
             return _entity.Position;
@@ -134,7 +138,7 @@ namespace Assets.Scripts.Gameplay.Components
             }
 
             _entity.IsSliding = false;
-            if (_entity.Speed > _config.MinSlideSpeed && _config.SlideDelay <= 0f && Vector3.Angle(Vector3.up, _entity.GroundNormal) > 5)
+            if (_entity.Speed > _config.MinSlideSpeed && _config.SlideDelay <= 0f && _entity.GroundNormal.y > _config.SlopeYNormalLimit)
             {
                 if (_entity.WasSliding == false)
                 {
@@ -167,7 +171,6 @@ namespace Assets.Scripts.Gameplay.Components
             var distToPoint = entCollider.height / 2f - entCollider.radius;
             var point1 = entCollider.transform.position + entCollider.center + Vector3.up * distToPoint;
             var point2 = entCollider.transform.position + entCollider.center + Vector3.down * distToPoint;
-            var velocity = _entity.Velocity;
 
             int overlaps = Physics.OverlapCapsuleNonAlloc(point1, point2, entCollider.radius, _entity.Collisions, _groundLayerMask, QueryTriggerInteraction.Ignore);
             if (overlaps == 0) return;
@@ -186,7 +189,7 @@ namespace Assets.Scripts.Gameplay.Components
                         //check if we allow steps, if so, do it. and if that doesnt work or it isnt just move on
                         if (_config.StepOffset > 0f)
                         {
-                            if (StepOffset(entCollider, entCollider.transform.position, velocity, groundVel))
+                            if (StepOffset(entCollider, entCollider.transform.position, _entity.Velocity, groundVel))
                             {
                                 return;
                             }
@@ -198,7 +201,8 @@ namespace Assets.Scripts.Gameplay.Components
                         Vector3 projectedVelocity = Vector3.Project(_entity.Velocity, -direction);
                         projectedVelocity.y = 0;
                         entCollider.transform.position += penetrationVector;
-                        velocity -= projectedVelocity;
+                        _entity.Position += penetrationVector;
+                        _entity.Velocity -= projectedVelocity;
                     }
                 }
             }

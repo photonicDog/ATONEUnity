@@ -87,7 +87,7 @@ public class MovementCore : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked;
         _pRigidbody = GetComponent<Rigidbody>();
         _pCollider = GetComponent<CapsuleCollider>();
-        _pInput = new InputComponent();
+        //_pInput = new InputComponent();
         _debug = DebugData.Instance;
         pMoveInput = new Vector3();
         pViewDir = new Vector2();

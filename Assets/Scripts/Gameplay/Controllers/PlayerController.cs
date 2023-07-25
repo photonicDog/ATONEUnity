@@ -1,5 +1,6 @@
 ﻿using Assets.Scripts.Gameplay.Components;
 using Assets.Scripts.Gameplay.Interfaces;
+using Assets.Scripts.Gameplay.Models;
 using Assets.Scripts.Gameplay.Models.Configurations;
 using UnityEngine;
 
@@ -15,9 +16,12 @@ namespace Assets.Scripts.Gameplay.Controllers
 
         public CameraController Camera;
 
+        public PlayerModel Data;
+
         // Start is called before the first frame update
         void Start()
         {
+            Data = new PlayerModel();
             _config = new PlayerConfig();
             Cursor.lockState = CursorLockMode.Locked;
             _input = GetComponent<InputComponent>();
@@ -40,6 +44,7 @@ namespace Assets.Scripts.Gameplay.Controllers
 
             _physics.ProcessMovement(_collider, _input.GetPlayerMovement(), _config.RunSpeed, Camera.GetLookAtAsVectors(), _input.StartedJumping() || _input.HeldJumping(), _config.JumpHeight, Time.deltaTime);
             transform.position = _physics.GetPosition();
+            Data.Speed = _physics.GetSpeed();
         }
 
         public Vector2 GetInputVector()
