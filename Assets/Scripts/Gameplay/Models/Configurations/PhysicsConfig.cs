@@ -5,7 +5,7 @@
         public float Gravity = -15.0f;
         public float GroundAccelerate = 36.0f;
         public float AirAccelerate = 150.0f;
-        public float StopSpeed = 100.0f;
+        public float StopSpeed = 2.0f;
         public float GroundFriction = 1.0f;
         public float AirFriction = 0.4f;
         public float MaxSpeed = 50.0f;

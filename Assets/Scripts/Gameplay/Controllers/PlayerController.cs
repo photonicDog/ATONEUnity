@@ -20,9 +20,9 @@ namespace Assets.Scripts.Gameplay.Controllers
         {
             _config = new PlayerConfig();
             Cursor.lockState = CursorLockMode.Locked;
+            _input = GetComponent<InputComponent>();
             _collider = GetComponent<CapsuleCollider>();
             _rigidbody = GetComponent<Rigidbody>();
-            _input = new InputComponent();
             _physics = new PhysicsComponent();
             Camera = GameObject.FindGameObjectsWithTag("CameraControl")[0].GetComponent<CameraController>();
             Camera.Player = this;

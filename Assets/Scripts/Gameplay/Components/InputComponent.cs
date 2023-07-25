@@ -3,13 +3,17 @@ using UnityEngine.InputSystem;
 
 namespace Assets.Scripts.Gameplay.Components
 {
-    public class InputComponent
+    public class InputComponent : MonoBehaviour
     {
         private GameplayControls _gameplayControls;
 
-        public InputComponent()
+        public InputComponent(GameplayControls controls)
         {
-            _gameplayControls = new();
+        }
+
+        private void Awake()
+        {
+            _gameplayControls = new GameplayControls();
         }
 
         private void Update()
@@ -46,8 +50,7 @@ namespace Assets.Scripts.Gameplay.Components
 
         public bool HeldJumping()
         {
-            if (StartedJumping() || StoppedJumping() == false) return false;
-            else return !StoppedJumping();
+            return _gameplayControls.Gameplay.Jump.IsPressed();
         }
 
         private bool StoppedJumping()

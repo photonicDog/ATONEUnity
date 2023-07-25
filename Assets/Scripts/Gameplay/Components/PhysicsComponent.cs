@@ -278,6 +278,7 @@ namespace Assets.Scripts.Gameplay.Components
 
         public Vector3 ProcessMovement(CapsuleCollider collider, Vector2 moveInput, float runSpeed, AngleVectors lookDirection, bool jumpInput, float jumpHeight, float deltaTime)
         {
+            Vector3 input = new Vector3(moveInput.x, 0, moveInput.y);
             SetJumpState(jumpInput);
             CheckGravity();
             CheckGround(collider);
@@ -292,11 +293,11 @@ namespace Assets.Scripts.Gameplay.Components
             }
             else if (_entity.IsGrounded)
             {
-                WalkMove(moveInput, lookDirection, runSpeed);
+                WalkMove(input, lookDirection, runSpeed);
             }
             else
             {
-                AirMove(moveInput, lookDirection);
+                AirMove(input, lookDirection);
                 TryMove(collider, deltaTime);
             }
 
@@ -312,13 +313,13 @@ namespace Assets.Scripts.Gameplay.Components
             _entity.IsGrounded = false;
             _entity.SurfaceFriction = 0f;
         }
-        public void WalkMove(Vector2 moveInput, AngleVectors lookAt, float speed)
+        public void WalkMove(Vector3 moveInput, AngleVectors lookAt, float speed)
         {
             _entity.Velocity = ApplyFriction(_entity.Velocity);
             _entity.WishVelocity = GetNextFrameWishDirection(lookAt, moveInput) * speed;
             _entity.Velocity = GetNewGroundVelocity(_entity.WishDirection, _entity.WishSpeed, _entity.Velocity);
         }
-        public void AirMove(Vector2 moveInput, AngleVectors lookAt)
+        public void AirMove(Vector3 moveInput, AngleVectors lookAt)
         {
             _entity.WasSliding = false;
             _entity.WishVelocity = GetNextFrameWishDirection(lookAt, moveInput, false);

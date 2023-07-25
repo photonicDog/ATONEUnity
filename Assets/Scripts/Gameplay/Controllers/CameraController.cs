@@ -23,14 +23,15 @@ namespace Assets.Scripts.Gameplay.Controllers
         void Start()
         {
             _config = new CameraConfig();
+            mainCamera = Camera.main;
             virtualCamera = GetComponent<CinemachineVirtualCamera>();
 
             lookAt = new GameObject("LookAtTarget").transform;
+            lookAt.parent = mainCamera.transform;
             lookAt.position = virtualCamera.transform.position;
             lookAt.position += virtualCamera.transform.forward * _config.FocalDistance;
 
             virtualCamera.LookAt = lookAt;
-            mainCamera = Camera.main;
         }
 
         // Update is called once per frame
@@ -84,9 +85,9 @@ namespace Assets.Scripts.Gameplay.Controllers
             //result.forward = new Vector3(cp * cy, -sp, cp * sy);
             //result.right = new Vector3(-1 * sr * sp * cy + (-1 * cr * -sy), -1 * sr * cp, (-1 * sr * sp * sy) + (-1 * cr * cy));
             //result.up = new Vector3(cr * sp * cy + (-sr * -sy), cr * cp, (cr * sp * sy) + (-sr * cy));
-            result.forward = mainCamera.transform.forward;
-            result.right = mainCamera.transform.right;
-            result.up = mainCamera.transform.up;
+            result.forward = virtualCamera.transform.forward;
+            result.right = virtualCamera.transform.right;
+            result.up = virtualCamera.transform.up;
 
             //Debug.Log($"X: {transform.eulerAngles.x}, Y: {transform.eulerAngles.y}, Z: {transform.eulerAngles.z}"); 
 
