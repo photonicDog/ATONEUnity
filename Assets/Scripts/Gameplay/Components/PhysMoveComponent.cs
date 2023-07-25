@@ -183,13 +183,13 @@ namespace Assets.Scripts.Gameplay.Components
                     Vector3 direction;
                     float distance;
 
-                    if (Physics.ComputePenetration(entCollider, entCollider.transform.position, Quaternion.identity,
+                    if (Physics.ComputePenetration(entCollider,_entity.Position, Quaternion.identity,
                                                     collider, collider.transform.position, collider.transform.rotation, out direction, out distance))
                     {
                         //check if we allow steps, if so, do it. and if that doesnt work or it isnt just move on
                         if (_config.StepOffset > 0f)
                         {
-                            if (StepOffset(entCollider, entCollider.transform.position, _entity.Velocity, groundVel))
+                            if (StepOffset(entCollider, _entity.Position, _entity.Velocity, groundVel))
                             {
                                 return;
                             }
@@ -210,8 +210,8 @@ namespace Assets.Scripts.Gameplay.Components
         public CastInfo CheckCollision(CapsuleCollider collider, Vector3 start, Vector3 destination, LayerMask layerMask, float colliderScale = 1.0f)
         {
             var distToPoint = collider.height / 2f - collider.radius;
-            var point1 = collider.transform.position + collider.center + Vector3.up * distToPoint;
-            var point2 = collider.transform.position + collider.center + Vector3.down * distToPoint;
+            var point1 = collider.center + Vector3.up * distToPoint;
+            var point2 = collider.center + Vector3.down * distToPoint;
             return CastCapsule(point1, point2, collider.radius, start, destination, collider.contactOffset, layerMask, colliderScale);
         }
         private CastInfo CastCapsule(Vector3 point1, Vector3 point2, float radius, Vector3 start, Vector3 destination, float contactOffset, int layerMask, float colliderScale = 1f)
@@ -222,10 +222,8 @@ namespace Assets.Scripts.Gameplay.Components
             var direction = (destination - start).normalized;
             var maxDistance = Vector3.Distance(start, destination) + longSide;
 
-            //Debug.DrawLine(point1 + Vector3.down * colliderScale * 0.5f, point1 + Vector3.down * colliderScale * 0.5f + (Vector3.right * 5f), Color.red);
-            //Debug.DrawLine(point2 + Vector3.up * colliderScale * 0.5f, point2 + Vector3.up * colliderScale * 0.5f + (Vector3.right * 5f), Color.red);
             RaycastHit hit;
-            if (Physics.CapsuleCast(point1 + Vector3.down * (1 - colliderScale) * 0.5f, point2 + Vector3.up * (1 - colliderScale) * 0.5f, radius * colliderScale,
+            if (Physics.CapsuleCast(start + point1 + Vector3.down * (1 - colliderScale) * 0.5f, start + point2 + Vector3.up * (1 - colliderScale) * 0.5f, radius * colliderScale,
                                     direction, out hit, maxDistance, layerMask, QueryTriggerInteraction.Ignore))
             {
                 castInfo.fraction = hit.distance / maxDistance;
@@ -472,9 +470,9 @@ namespace Assets.Scripts.Gameplay.Components
             }
 
             //wall check (lower collider scale to not hit floor/ceiling)
-            var wallCast = CastCapsule(point1, point2, radius, position, position + velocity,
-                                       contactOffset, _groundLayerMask, 0.9f);
-            if (wallCast.collider == null || Vector3.Angle(Vector3.up, wallCast.normal) <= _config.SlopeAngleLimit)
+            var wallCast = CastCapsule(position + point1, position + point2, radius, position, position + velocity,
+                                       contactOffset, _groundLayerMask, 1 - _config.StepOffset);
+            if (wallCast.collider == null || (Vector3.Angle(Vector3.up, wallCast.normal) <= _config.SlopeAngleLimit && wallCast.collider != groundCast.collider))
             {
                 return false;
             }
@@ -524,8 +522,7 @@ namespace Assets.Scripts.Gameplay.Components
 
             if (position != nextStepPos && forwardDistance > 0f)
             {
-                //TODO: not like this lol
-                entCollider.transform.position = nextStepPos + forwardDirection * forwardDistance * Time.deltaTime;
+                _entity.Position = nextStepPos + forwardDirection * forwardDistance * Time.deltaTime;
                 return true;
             }
             else
