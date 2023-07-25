@@ -10,6 +10,8 @@ namespace Assets.Scripts.Gameplay.Controllers
     [RequireComponent(typeof(CinemachineVirtualCameraBase))]
     public class CameraController : MonoBehaviour
     {
+        public PlayerController Player;
+
         private CameraConfig _config;
         public Camera mainCamera;
         private CinemachineVirtualCamera virtualCamera;
@@ -28,6 +30,7 @@ namespace Assets.Scripts.Gameplay.Controllers
             lookAt.position += virtualCamera.transform.forward * _config.FocalDistance;
 
             virtualCamera.LookAt = lookAt;
+            mainCamera = Camera.main;
         }
 
         // Update is called once per frame
@@ -50,7 +53,10 @@ namespace Assets.Scripts.Gameplay.Controllers
             lookAt.position = pos;
             //Debug.Log(pos);
             ///why is this even here? - freya
-            //lookAt.Rotate(0,0, player.GetInputVector().x * _config.FocalDistance);
+            if (Player != null)
+            {
+                lookAt.Rotate(0, 0, Player.GetInputVector().x * _config.FocalDistance);
+            }
 
             //Debug.Log($"LA: {lookAt.eulerAngles.z}, C: {virtualCamera.transform.eulerAngles.z}");
             //Debug.DrawLine(lookAt.position, transform.position, Color.green);
