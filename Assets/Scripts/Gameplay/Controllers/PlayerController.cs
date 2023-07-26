@@ -13,18 +13,28 @@ namespace Assets.Scripts.Gameplay.Controllers
         private PhysMoveComponent _physics;
 
         public CameraController Camera;
+        public TetherController Tether;
 
         public PlayerModel Data;
 
         // Start is called before the first frame update
         void Start()
         {
-            Data = new PlayerModel();
-            _config = new PlayerConfig();
             Cursor.lockState = CursorLockMode.Locked;
+
+            _config = new PlayerConfig();
             _input = GetComponent<InputComponent>();
             _collider = GetComponent<CapsuleCollider>();
             _physics = new PhysMoveComponent();
+
+            Data = new PlayerModel();
+
+            var tetherObject = new GameObject("Tether");
+            tetherObject.transform.parent = transform;
+            tetherObject.transform.localPosition = Vector3.zero;
+            Tether = tetherObject.AddComponent<TetherController>();
+            Tether.Player = this;
+
             Camera = GameObject.FindGameObjectsWithTag("CameraControl")[0].GetComponent<CameraController>();
             Camera.Player = this;
         }
@@ -32,16 +42,17 @@ namespace Assets.Scripts.Gameplay.Controllers
         void Update()
         {
             _physics.SetPosition(transform.position);
-            ///DEBUG TELEPORT
+
             if (_input.GetAltFire())
             {
-                _physics.KillVelocity();
-                transform.position = new Vector3(-16.9454803f, 2.74504304f, 101.066254f);
+                Tether.Fire(transform.position, Camera.GetLookAtAsVectors().forward.normalized);
             }
 
             _physics.ProcessMovement(_collider, _input.GetPlayerMovement(), _config.RunSpeed, Camera.GetLookAtAsVectors(), _input.StartedJumping() || _input.HeldJumping(), _config.JumpHeight, Time.deltaTime);
             transform.position = _physics.GetPosition();
+            Tether.transform.position = transform.position;
             Data.Speed = _physics.GetSpeed();
+            Data.OnGround = _physics.GetGroundedStatus();
         }
 
         public Vector2 GetInputVector()
