@@ -43,7 +43,10 @@ namespace Assets.Scripts.Gameplay.Components
         {
             return _entity.Position;
         }
-
+        public bool GetGroundedStatus()
+        {
+            return _entity.IsGrounded;
+        }
         public void SetPosition(Vector3 position)
         {
             _entity.Position = position;
