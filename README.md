@@ -1,11 +1,4 @@
 # ATONE
-Unity prototype for fast action source engine style movement shooter ATONE
+Unity prototype/test ground for ATONE. You can find the repository for the full game in development [here](https://github.com/photonicDog/ATONE).
 
-Controls:
-* WASD: Move
-* Space: Jump
-* LCtrl: Crouch \[Not implemented]
-* M1: Fire revolver \[Not implemented]
-* M2: Fire/Release tether \[Not implemented]
-
-Check issues/projects board for development progress
+Check issues/projects board for development progress.
