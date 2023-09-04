@@ -11,6 +11,7 @@ namespace Assets.Scripts.Gameplay.Models
             _colliders = new Collider[config.MaxCollisions];
         }
 
+        private Vector3 _baseVelocity;
         private Vector3 _velocity;
         private Vector3 _wishVelocity;
         private Vector3 _position;
@@ -31,6 +32,7 @@ namespace Assets.Scripts.Gameplay.Models
 
         public Vector3 Position { get => _position; set => _position = value; }
 
+        public Vector3 BaseVelocity { get => _baseVelocity; set => _baseVelocity = value; }
         public Vector3 Velocity { get => _velocity; set => _velocity = value; }
 
         public float Speed => _velocity.magnitude;

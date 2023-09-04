@@ -27,6 +27,7 @@
 
         public uint MaxCollisions = 128;
         public uint MaxClipPlanes = 6;
+        public uint MaxExternalPhysicsSources = 4;
         public uint NumBumps = 1;
     }
 }

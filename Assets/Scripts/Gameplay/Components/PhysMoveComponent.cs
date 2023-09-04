@@ -3,6 +3,7 @@ using Assets.Scripts.Gameplay.Models;
 using Assets.Scripts.Gameplay.Models.Configurations;
 using Assets.Scripts.Gameplay.Structures;
 using Assets.Scripts.Gameplay.Types.Enums;
+using TMPro;
 using UnityEngine;
 
 namespace Assets.Scripts.Gameplay.Components
@@ -35,6 +36,30 @@ namespace Assets.Scripts.Gameplay.Components
         //////////////////
         //// HELPER
 
+        public Vector3 GetVelocity()
+        {
+            return _entity.Velocity;
+        }
+        public void SetVelocity(Vector3 vec)
+        {
+            _entity.Velocity = vec;
+        }
+        public void AdjustVelocity(Vector3 vec)
+        {
+            _entity.Velocity += vec;
+        }
+        public Vector3 GetBaseVelocity()
+        {
+            return _entity.BaseVelocity;
+        }
+        public void SetBaseVelocity(Vector3 vec)
+        {
+            _entity.BaseVelocity = vec;
+        }
+        public void AdjustBaseVelocity(Vector3 vec)
+        {
+            _entity.BaseVelocity += vec;
+        }
         public float GetSpeed()
         {
             return _entity.Speed;
@@ -281,9 +306,19 @@ namespace Assets.Scripts.Gameplay.Components
         //////////////////
         //// MOVEMENT
 
-        public Vector3 ProcessMovement(CapsuleCollider collider, Vector2 moveInput, float runSpeed, AngleVectors lookDirection, bool jumpInput, float jumpHeight, float deltaTime)
+        public void ToggleBaseVelocity(bool toggle)
         {
-            Vector3 input = new Vector3(moveInput.x, 0, moveInput.y);
+            if (toggle)
+            {
+                _entity.Velocity += _entity.BaseVelocity;
+            } else
+            {
+                _entity.Velocity -= _entity.BaseVelocity;
+            }
+        }
+
+        public void UpdateStates(CapsuleCollider collider, bool jumpInput)
+        {
             SetJumpState(jumpInput);
             CheckGravity();
             CheckGround(collider);
@@ -291,6 +326,13 @@ namespace Assets.Scripts.Gameplay.Components
             {
                 CheckSliding();
             }
+        }
+
+        public void UpdateVelocity(CapsuleCollider collider, Vector2 moveInput, float runSpeed, AngleVectors lookDirection, float jumpHeight, float deltaTime, bool applyBaseVel = true)
+        {
+            Vector3 input = new Vector3(moveInput.x, 0, moveInput.y);
+
+            if (applyBaseVel) ToggleBaseVelocity(false);
 
             if (_entity.IsJumping && _entity.IsGrounded)
             {
@@ -306,11 +348,14 @@ namespace Assets.Scripts.Gameplay.Components
                 TryMove(collider, deltaTime);
             }
 
+            if (applyBaseVel) ToggleBaseVelocity(true);
+        }
+
+        public void UpdatePosition(float deltaTime, CapsuleCollider collider)
+        {
             MovePosition(deltaTime);
 
             ResolveCollisions(collider);
-
-            return _entity.Position;
         }
         public void Jump(float jumpHeight)
         {

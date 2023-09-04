@@ -12,9 +12,10 @@ namespace Assets.Scripts.Gameplay.Models
 
         private Vector3 _hookTarget;
         private Vector3 _hookPosition;
+        private float _tetherRadius;
         private Collider _tetheredCollider;
 
-        private float cooldown;
+        private float _cooldown;
 
         public TetherModel(Transform tetherHook, LineRenderer tetherRenderer)
         {
@@ -28,7 +29,8 @@ namespace Assets.Scripts.Gameplay.Models
         public Vector3 HookTarget {  get { return _hookTarget; } set { _hookTarget = value; } }
         public Vector3 NextHookPosition { get { return _hookPosition; } set { _hookPosition = value; } }
         public Collider TetheredCollider { get { return _tetheredCollider; } set { _tetheredCollider = value; } }
-        public float Cooldown { get {  return cooldown; } set {  cooldown = value; } }
+        public float Cooldown { get {  return _cooldown; } set {  _cooldown = value; } }
+        public float TetherRadius { get { return _tetherRadius; } set { _tetherRadius = value; } }
 
         public bool CheckState(TetherStatus tetherStatus)
         {

@@ -13,7 +13,7 @@ namespace Assets.Scripts.Gameplay.Controllers
         private PhysMoveComponent _physics;
 
         public CameraController Camera;
-        public TetherController Tether;
+        public TetherController TetherBase;
 
         public PlayerModel Data;
 
@@ -32,8 +32,9 @@ namespace Assets.Scripts.Gameplay.Controllers
             var tetherObject = new GameObject("Tether");
             tetherObject.transform.parent = transform;
             tetherObject.transform.localPosition = Vector3.zero;
-            Tether = tetherObject.AddComponent<TetherController>();
-            Tether.Player = this;
+            TetherBase = tetherObject.AddComponent<TetherController>();
+            TetherBase.Player = this;
+            TetherBase.AddPhysMoveComponent(_physics);
 
             Camera = GameObject.FindGameObjectsWithTag("CameraControl")[0].GetComponent<CameraController>();
             Camera.Player = this;
@@ -45,12 +46,17 @@ namespace Assets.Scripts.Gameplay.Controllers
 
             if (_input.GetAltFire())
             {
-                Tether.Fire(transform.position, Camera.GetLookAtAsVectors().forward.normalized);
+                TetherBase.Fire(transform.position, Camera.GetLookAtAsVectors().forward.normalized);
             }
 
-            _physics.ProcessMovement(_collider, _input.GetPlayerMovement(), _config.RunSpeed, Camera.GetLookAtAsVectors(), _input.StartedJumping() || _input.HeldJumping(), _config.JumpHeight, Time.deltaTime);
+            _physics.UpdateStates(_collider, _input.StartedJumping() || _input.HeldJumping());
+            _physics.ToggleBaseVelocity(false);
+            _physics.UpdateVelocity(_collider, _input.GetPlayerMovement(), _config.RunSpeed, Camera.GetLookAtAsVectors(), _config.JumpHeight, Time.deltaTime, false);
+            TetherBase.AdjustVelocityToTether();
+            _physics.ToggleBaseVelocity(true);
+            _physics.UpdatePosition(Time.deltaTime, _collider);
             transform.position = _physics.GetPosition();
-            Tether.transform.position = transform.position;
+            TetherBase.transform.position = transform.position;
             Data.Speed = _physics.GetSpeed();
             Data.OnGround = _physics.GetGroundedStatus();
         }

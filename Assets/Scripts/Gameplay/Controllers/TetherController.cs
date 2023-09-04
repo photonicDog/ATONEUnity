@@ -1,7 +1,10 @@
-﻿using Assets.Scripts.Gameplay.Models;
+﻿using Assets.Scripts.Gameplay.Components;
+using Assets.Scripts.Gameplay.Models;
 using Assets.Scripts.Gameplay.Models.Configurations;
 using Assets.Scripts.Gameplay.Models.Enums;
 using System.Collections;
+using System.Net.WebSockets;
+using UnityEditor.U2D;
 using UnityEngine;
 
 namespace Assets.Scripts.Gameplay.Controllers
@@ -11,6 +14,7 @@ namespace Assets.Scripts.Gameplay.Controllers
         public PlayerController Player;
         private TetherConfig _config;
         private TetherModel _tether;
+        private PhysMoveComponent _physics;
 
         private void Start()
         {
@@ -19,13 +23,9 @@ namespace Assets.Scripts.Gameplay.Controllers
             tetherHook.parent = transform;
             tetherHook.transform.localPosition = Vector3.zero;
             var lineRenderer = gameObject.AddComponent<LineRenderer>();
-            lineRenderer.positionCount = 2;
-            lineRenderer.startColor = Color.red;
-            lineRenderer.endColor = Color.red;
+            lineRenderer.positionCount = 3;
             lineRenderer.startWidth = 1;
-            lineRenderer.endWidth = 2;
-            lineRenderer.SetPosition(0, transform.position);
-            lineRenderer.SetPosition(1, tetherHook.position);
+            lineRenderer.endWidth = 1;
             _tether = new TetherModel(tetherHook, lineRenderer);
 
             _tether.State = TetherStatus.Ready;
@@ -56,8 +56,6 @@ namespace Assets.Scripts.Gameplay.Controllers
                     break;
 
                 case TetherStatus.Cooldown:
-                    if (!(_config.CooldownOnlyOnGround && !Player.Data.OnGround))
-                    {
                         if (_tether.Cooldown <= 0f)
                         {
                             _tether.Cooldown = 0f;
@@ -65,15 +63,22 @@ namespace Assets.Scripts.Gameplay.Controllers
                         }
                         else
                         {
-                            _tether.Cooldown -= _tether.Cooldown;
+                            if (!(_config.CooldownOnlyOnGround && !Player.Data.OnGround))
+                            {
+                                _tether.Cooldown -= Time.deltaTime;
+                            }
                         }
-                    }
                     _tether.NextHookPosition = transform.position;
                     break;
             }
 
-            _tether.TetherRenderer.SetPosition(0, transform.position);
-            _tether.TetherRenderer.SetPosition(1, _tether.NextHookPosition);
+            AdjustVelocityToTether();
+
+            var dir = (_tether.NextHookPosition - transform.position).normalized;
+            _tether.TetherRenderer.SetPosition(0, _tether.NextHookPosition - dir * (_tether.TetherRadius + _config.TetherLeashMaxRange));
+            _tether.TetherRenderer.SetPosition(1, _tether.NextHookPosition - dir * _tether.TetherRadius);
+            _tether.TetherRenderer.SetPosition(2, _tether.NextHookPosition);
+
             _tether.TetherRenderer.enabled = !(_tether.CheckState(TetherStatus.Ready) || _tether.CheckState(TetherStatus.Cooldown));
 
             _tether.TetherHook.position = _tether.NextHookPosition;
@@ -82,9 +87,65 @@ namespace Assets.Scripts.Gameplay.Controllers
             //Debug.DrawLine(transform.position, _hookPosition, Color.red);
         }
 
+        public void AddPhysMoveComponent(PhysMoveComponent physics)
+        {
+            _physics = physics;
+        }
+
+        public void AdjustVelocityToTether()
+        {
+            if (!_tether.CheckState(TetherStatus.Tethered))
+            {
+                return;
+            }
+
+            var tetherHookPos = _tether.TetherHook.position;
+            var currentPos = transform.position;
+            var nextFramePos = _physics.GetPosition();
+            var distFromHook = (nextFramePos - tetherHookPos).magnitude;
+
+            if (distFromHook < _tether.TetherRadius)
+            {
+                return;
+            } else if (distFromHook > _tether.TetherRadius + _config.TetherLeashMaxRange)
+            {
+                _tether.TetheredCollider = null;
+                _tether.SetState(TetherStatus.AwaitingRecline);
+            }
+
+            //TODO: adjust leash force so that it work
+            //IDEA: what if we work out the vector opposite from the hook, separately to its right and up counterparts?
+            //      those forces should cancel out, but have a max force it can apply (effectively it can only cancel so much)
+            //      the other two shouldn't be affected by the tether at all other than the velocity they add right?
+            //      work this out later
+            //define pull/push force
+            var positionToHook = tetherHookPos - nextFramePos;
+            var leashForce = positionToHook - (positionToHook.normalized * _tether.TetherRadius);
+            nextFramePos += leashForce;
+            var currentToHook = currentPos - tetherHookPos;
+            var nextFrameToHook = nextFramePos - tetherHookPos;
+            //TODO: this v returns zero all the time. find out why
+            var anglVel = Vector3.Angle(currentToHook, nextFrameToHook);
+            var centiVel = -1 * Mathf.Pow(anglVel / Time.deltaTime, 2) * (nextFrameToHook) * Time.deltaTime;
+            Debug.DrawLine(transform.position, nextFramePos, Color.red);
+            Debug.DrawLine(nextFramePos, nextFramePos + leashForce, Color.blue);
+            /*
+                        if (Mathf.Abs(leashDeviance / _config.TetherLeashRange) >= 1)
+                        {
+                            _tether.TetheredCollider = null;
+                            _tether.SetState(TetherStatus.AwaitingRecline);
+                        }
+                        else
+                        {
+                            _physics.SetVelocity(newVel);
+                        }
+            */
+            _physics.SetBaseVelocity(centiVel * (distFromHook - _tether.TetherRadius)/_config.TetherLeashMaxRange);
+        }
+
         public void Fire(Vector3 origin, Vector3 aimDirection)
         {
-            _tether.HookTarget = origin + aimDirection * _config.MaxDistance;
+            _tether.HookTarget = origin + aimDirection * _config.MaxHookDistance;
             //if currently tethered, recline
             if (_tether.CheckState(TetherStatus.Tethered))
             {
@@ -103,7 +164,7 @@ namespace Assets.Scripts.Gameplay.Controllers
             _tether.SetState(TetherStatus.Firing);
 
             //limit distance to max distance
-            Vector3.ClampMagnitude(_tether.HookTarget, _config.MaxDistance);
+            Vector3.ClampMagnitude(_tether.HookTarget, _config.MaxHookDistance);
             StartCoroutine(Firing(_config.FireSpeed, _config.FireTimeMax));
         }
 
@@ -145,9 +206,9 @@ namespace Assets.Scripts.Gameplay.Controllers
             var timeSpentFiring = 0f;
             RaycastHit hit;
 
-            while (_tether.TetherHook.position != _tether.HookTarget || timeSpentFiring >= fireTimeMax || !_tether.CheckState(TetherStatus.Tethered))
+            while (_tether.TetherHook.position != _tether.HookTarget && timeSpentFiring < fireTimeMax && (newPos - startPos).magnitude < _config.MaxHookDistance && !_tether.CheckState(TetherStatus.Tethered))
             {
-                timeSpentFiring += Time.deltaTime + timeSpentFiring < fireTimeMax ? Time.deltaTime : fireTimeMax - timeSpentFiring;
+                timeSpentFiring += Time.deltaTime;
                 lastPos = newPos;
                 newPos += direction * fireSpeed * Time.deltaTime;
                 Physics.Raycast(lastPos, direction, out hit, (newPos - lastPos).magnitude, _config.TetherableLayerMasks);
@@ -160,6 +221,7 @@ namespace Assets.Scripts.Gameplay.Controllers
                         _tether.TetheredCollider = hit.collider;
                         _tether.HookTarget = hit.point;
                         _tether.TetherHook.position = _tether.HookTarget;
+                        _tether.TetherRadius = (_tether.HookTarget - transform.position).magnitude;
                         _tether.SetState(TetherStatus.Tethered);
                         yield break;
                     } else
@@ -194,7 +256,7 @@ namespace Assets.Scripts.Gameplay.Controllers
             var newPos = startPos;
             var time = 0f;
 
-            retractTime *= Vector3.Distance(startPos, transform.position) / _config.MaxDistance;
+            retractTime *= Vector3.Distance(startPos, transform.position) / _config.MaxHookDistance;
             while (time < retractTime)
             {
                 newPos = Vector3.Lerp(startPos, transform.position, time/retractTime);
