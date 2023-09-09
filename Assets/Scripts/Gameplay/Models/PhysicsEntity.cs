@@ -29,6 +29,8 @@ namespace Assets.Scripts.Gameplay.Models
         private bool _isSliding;
         private bool _wasSliding;
 
+        private bool _inOrbit;
+
         public Vector3 Position { get => _position; set => _position = value; }
 
         public Vector3 Velocity { get => _velocity; set => _velocity = value; }
@@ -60,6 +62,7 @@ namespace Assets.Scripts.Gameplay.Models
         public Vector3 SlideDirection { get => _slideDirection; set => _slideDirection = value; }
         public float CurrentSlideSpeed { get => _currentSlideSpeed; set => _currentSlideSpeed = value;}
         public float SlideDelayTimer {  get => _slideDelayTimer; set => _slideDelayTimer = value; } 
-    
+
+        public bool InOrbit { get => _inOrbit; set => _inOrbit = value; }
     }
 }
